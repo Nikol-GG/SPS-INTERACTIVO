@@ -11,8 +11,6 @@ import {
 const tasksCatalog = [
   //TAREA 1
   {
-    id: 'pr-nom-042',
-    code: "PR-NOM-042",
     title: "Cargue Planillas de Seguridad Social",
     category: "Seguridad Social",
     version: "v2026.1",
