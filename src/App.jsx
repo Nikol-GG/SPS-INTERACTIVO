@@ -9,16 +9,15 @@ import {
 
 // Datos iniciales estructurados del SIPOC
 const initialSipocData = {
-  title: "Cargue y Habilitación de Seguridad Social (Pozos Petroleros)",
+  title: "Cargue Planillas de Seguridad Social",
   code: "PR-NOM-042",
   version: "v2026.1",
-  responsable: "Practicante de Ingeniería Industrial / Analista de Nómina",
+  responsable: "Practicante Analista de Nómina",
   impactoNegocio: "Permiso de ingreso de trabajadores a campos de extracción. Un error paraliza la operación y genera costos de tiempo inactivo y multas.",
 
   suppliers: [
-    { id: 's1', title: 'Mi Planilla / Asofondos', desc: 'Operadores de Información de SS', icon: 'Building2' },
-    { id: 's2', title: 'SAP ERP (Módulo HR)', desc: 'Base Maestra de Empleados', icon: 'Cpu' },
-    { id: 's3', title: 'Supervisores HSE', desc: 'Solicitud de Turnos en Pozos', icon: 'Users' }
+    { id: 's1', title: 'Mi Planilla', desc: 'Plataforma para descargar las planillas', icon: 'Building2' },
+    { id: 's2', title: 'SAP ERP ', desc: 'Base Maestra de Empleados', icon: 'Cpu' }
   ],
 
   inputs: [
@@ -29,13 +28,11 @@ const initialSipocData = {
 
   outputs: [
     { id: 'o1', title: 'PDFs Renombrados', desc: 'Formato estándar por Cédula' },
-    { id: 'o2', title: 'Template de Cargue', desc: 'Archivo estandarizado (GIN + ID)' },
-    { id: 'o3', title: 'Habilitación en Pozo', desc: 'Registro activo en plataforma HSE' }
+    { id: 'o2', title: 'Template de Cargue', desc: 'Archivo estandarizado (GIN + ID)' }
   ],
 
   customers: [
     { id: 'c1', title: 'Trabajadores en Campo', desc: 'Acceso habilitado al pozo' },
-    { id: 'c2', title: 'Supervisores HSE / Campo', desc: 'Verificación de cuadrillas' },
     { id: 'c3', title: 'Cliente / Auditoría', desc: 'Cumplimiento legal y contractual' }
   ],
 
@@ -43,19 +40,15 @@ const initialSipocData = {
     {
       id: 'p1',
       stepNumber: 1,
-      title: 'Descargar Planillas y Consolidado',
-      summary: 'Obtención masiva de archivos PDF y consolidado Excel desde el operador.',
+      title: 'Descargar Planillas y Excel',
+      summary: 'Obtención  las planillas por empleados en PDF y la planilla en Excel',
       sapTx: 'N/A (Portal Portal Web "Mi Planilla")',
-      sapVariant: 'VAR_NOM_SEGSOC_2026',
-      folderPath: '\\\\servidor_nomina\\pozos\\2026\\descargas_raw\\',
       pcrTitle: 'Descarga incompleta o período equivocado',
-      pcrDesc: 'Bajar planillas de un período anterior o dejar trabajadores por fuera del lote.',
+      pcrDesc: 'Bajar planillas de un período anterior.',
       checklists: [
-        'Confirmar que el período de pago coincida con el mes en curso.',
-        'Verificar que el número total de registros en Excel coincida con la cantidad de PDFs bajados.',
-        'Guardar archivos exclusivamente en la carpeta oficial del servidor.'
+        'Confirmar que el período de pago coincida con el mes en curso.'
       ],
-      userNotes: 'Recuerda que el reporte Excel de Mi Planilla descarga por defecto con comas. Ajustar formato si la macro lo requiere.'
+      userNotes: 'Recuerda actualizar la página mientras descargas los pdf porque puede tardar un poco o no se actualiza el porcentaje.'
     },
     {
       id: 'p2',
