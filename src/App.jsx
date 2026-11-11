@@ -1723,6 +1723,709 @@ const tasksCatalog = [
         userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
       }
     ]
+  },
+   //TAREA 23
+  {
+    id: 'pr-nom-042',
+    code: "PR-NOM-042",
+    title: "Actualización Status 15 a 19",
+    category: "Actualizar Status",
+    version: "v2026.1",
+    responsable: "Practicante Analista de Nómina",
+    impactoNegocio: "Permiso de ingreso de trabajadores a campos de extracción. Un error paraliza la operación y genera costos de tiempo inactivo y multas contractuales.",
+    criticidad: "Alta",
+    frecuencia: "Mensual",
+    suppliers: [
+      { id: 's1', title: 'MiPlanilla', desc: 'Página oficial' },
+      { id: 's2', title: 'SAP ERP', desc: 'Base Maestra de Empleados' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Planillas en PDF', desc: 'Planillas de cada empleado' },
+      { id: 'i2', title: 'Reporte Excel Masivo', desc: 'Consolidado de las personas con Seguridad Social' },
+      { id: 'i3', title: 'Variantes SAP (GIN)', desc: 'Para obtener el Código Único de Trabajador' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'PDFs Renombrados', desc: '' },
+      { id: 'o2', title: 'Template de Cargue', desc: 'Archivo estandarizado (GIN + Nombre + ID)' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores en Campo', desc: 'Acceso habilitado al pozo' },
+      { id: 'c3', title: 'Auditoría', desc: 'Cumplimiento legal y contractual' }
+    ],
+    processSteps: [
+      {
+        id: 'p1',
+        stepNumber: 1,
+        title: 'Descargar Planillas y Consolidado',
+        summary: 'Obtención masiva de archivos PDF y consolidado Excel desde el operador de información.',
+        sapTx: 'Portal Web "Mi Planilla"',
+        sapVariant: 'VAR_NOM_SEGSOC_2026',
+        folderPath: '\\\\servidor_nomina\\pozos\\2026\\descargas_raw\\',
+        pcrTitle: 'Descarga incompleta o período equivocado',
+        pcrDesc: 'Bajar planillas de un período anterior o dejar trabajadores por fuera del lote.',
+        checklists: [
+          'Confirmar que el período de pago coincida con el mes en curso.',
+          'Verificar que el número total de registros en Excel coincida con la cantidad de PDFs bajados.',
+          'Guardar archivos exclusivamente en la carpeta oficial del servidor.'
+        ],
+        userNotes: 'El reporte Excel de Mi Planilla descarga por defecto con comas. Ajustar formato si la macro lo requiere.'
+      },
+      {
+        id: 'p2',
+        stepNumber: 2,
+        title: 'Ejecutar Macro de Renombrado',
+        summary: 'Transformación automatizada de nombres de PDF al estándar Cédula_Nombre.pdf.',
+        sapTx: 'Excel VBA (Macro_Renombrar_v3.xlsm)',
+        sapVariant: 'Plantilla de Rótulo Automático',
+        folderPath: '\\\\servidor_nomina\\pozos\\2026\\pdf_renombrados\\',
+        pcrTitle: 'Desfase de correspondencia PDF vs. Cédula',
+        pcrDesc: 'Si el Excel tiene una fila corrida, la Macro asignará la planilla de una persona al PDF de otra.',
+        checklists: [
+          'Ejecutar la macro en modo prueba si se agregaron nuevas filas manualmente.',
+          'Efectuar conteo exacto: Archivos en carpeta destino = Filas en Excel.',
+          'Abrir manualmente el primer, del medio y último PDF para verificar que el contenido coincida con el nombre del archivo.'
+        ],
+        userNotes: 'Si la macro arroja error de permisos, ejecutar Excel como Administrador.'
+      },
+      {
+        id: 'p3',
+        stepNumber: 3,
+        title: 'Extraer GIN en SAP ERP',
+        summary: 'Cruce del número de cédula contra la base maestra para obtener el Código Único GIN.',
+        sapTx: 'SE16N / ZHR_MAESTRO_POZOS / SQ01',
+        sapVariant: '/VAR_HABILITA_POZO_GIN',
+        folderPath: 'SAP ERP -> Exportar a Local: C:\\Users\\Public\\SAP_Exports\\',
+        pcrTitle: 'Cédula no encontrada o GIN duplicado',
+        pcrDesc: 'Personal de nuevo ingreso que no tenga variante GIN creada en SAP rebotará en la plataforma.',
+        checklists: [
+          'Utilizar la variante oficial /VAR_HABILITA_POZO_GIN en la transacción SE16N.',
+          'Asegurar que la búsqueda no limite la cantidad máxima de aciertos a 200 (quitar límite en SAP).',
+          'Validar que no existan celdas vacías (#N/A) en el cruce del archivo resultante.'
+        ],
+        userNotes: 'Si una cédula es de un contratista reciente, solicitar la creación del GIN al analista senior.'
+      },
+      {
+        id: 'p4',
+        stepNumber: 4,
+        title: 'Cargar PDFs a Ruta del Servidor',
+        summary: 'Transferencia masiva de planillas al repositorio de acceso remoto de la plataforma.',
+        sapTx: 'Repositorio Compartido / FTP',
+        sapVariant: 'N/A - Protocolo de Red',
+        folderPath: '\\\\servidor_nomina\\plataforma_pozos\\planillas_cargadas\\',
+        pcrTitle: 'Archivos corruptos o timeout de red durante la carga',
+        pcrDesc: 'Un corte breve de red puede dejar archivos en tamaño 0 KB, impidiendo que el trabajador descargue su carné.',
+        checklists: [
+          'Verificar el peso del lote total antes y después del pegado en el servidor.',
+          'Asegurarse de que no existan archivos abiertos en Excel/Adobe mientras se realiza la carga.',
+          'Revisar que el nombre de los archivos no contenga caracteres especiales (ñ, tildes, #, /).'
+        ],
+        userNotes: 'Hacer el cargue preferiblemente antes de las 11:00 AM para evitar congestión de canal.'
+      },
+      {
+        id: 'p5',
+        stepNumber: 5,
+        title: 'Estructurar y Cargar Template',
+        summary: 'Asociación final en la plataforma entre el GIN, la cédula y la ruta del PDF.',
+        sapTx: 'Plataforma Web Control Operaciones Pozos',
+        sapVariant: 'Template_Cargue_Masivo_v4.xlsx',
+        folderPath: 'Plataforma HSE -> Menú "Cargue Masivo de Seguridad Social"',
+        pcrTitle: 'Rechazo del Template por formato de celdas',
+        pcrDesc: 'Cédulas con formato científico (1.02E+09) o GINs con ceros a la izquierda borrados.',
+        checklists: [
+          'Formatear la columna Cédula y GIN explícitamente como TEXTO en Excel antes de guardar.',
+          'Comprobar que no existan duplicados en la columna GIN dentro del mismo lote.',
+          'Verificar el mensaje de confirmación del sistema ("Cargue 100% Exitoso").'
+        ],
+        userNotes: 'Guardar siempre el archivo con extensión .XLSX estándar.'
+      },
+      {
+        id: 'p6',
+        stepNumber: 6,
+        title: 'Auditoría y Muestreo de Calidad',
+        summary: 'Verificación aleatoria y dirigida en la plataforma para confirmar visualización activa.',
+        sapTx: 'Portal de Verificación HSE en Campo',
+        sapVariant: 'Filtro por Centro de Costo / Pozo Target',
+        folderPath: 'Plataforma HSE -> Consulta de Personal Habilitado',
+        pcrTitle: 'Confirmación falsa de cargue',
+        pcrDesc: 'Confiar en que el sistema funcionó sin validar que el PDF abra correctamente desde la vista del supervisor en pozo.',
+        checklists: [
+          'Auditar el 10% de la población cargada (mínimo 5 trabajadores).',
+          'Incluir en la muestra obligatoriamente: el primer registro, el último, y 3 elegidos al azar.',
+          'Descargar el carné digital de 1 trabajador y confirmar que el PDF abre correctamente.'
+        ],
+        userNotes: 'Esta es la validación que evita el error de $1.000 USD. No saltarse el muestreo.'
+      }
+    ]
+  },
+  //TAREA 24
+  {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Cargue de Interfaces",
+    category: "Interfaces",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
+  }, 
+  //TAREA 25
+    {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Vacaciones Anticipadas",
+    category: "Checks 4A",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
+  },
+   //TAREA 26
+    {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Prima Geomobile",
+    category: "Checks 4A",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
+  }, //TAREA 27
+    {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Libranzas BBVA",
+    category: "Checks 4A",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
+  }, //TAREA 28
+    {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Novedades Payroll",
+    category: "Checks 4A",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
+  }, //TAREA 29
+    {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Bono Antiguedad",
+    category: "Checks 4A",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
+  }, //TAREA 30
+    {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Pernonal Art 140",
+    category: "Checks 4A",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
+  }, //TAREA 31
+    {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Apoyo Sostenimiento",
+    category: "Checks 4A",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
+  }, //TAREA 32
+    {
+    id: 'pr-nom-088',
+    code: "PR-NOM-088",
+    title: "Pensionados",
+    category: "Checks 4A",
+    version: "v2026.1",
+    responsable: "Practicante / Analista de Nómina",
+    impactoNegocio: "Garantiza el pago justo por tiempo suplementario respetando la legislación laboral colombiana y los techos presupuestales por centro de costos.",
+    criticidad: "Media-Alta",
+    frecuencia: "Quincenal",
+    suppliers: [
+      { id: 's1', title: 'Jefes de Área / Operaciones', desc: 'Aprobación de turnos extra' },
+      { id: 's2', title: 'Sistema de Biométrico / Marcaciones', desc: 'Registro físico de ingresos/salidas' }
+    ],
+    inputs: [
+      { id: 'i1', title: 'Reporte de Marcaciones Biométricas', desc: 'Horarios reales marcados' },
+      { id: 'i2', title: 'Formato de Autorización de Horas Extras', desc: 'Firma del Director de Área' }
+    ],
+    outputs: [
+      { id: 'o1', title: 'Infotipo 2005 / 2002 en SAP', desc: 'Conceptos de pago asignados' },
+      { id: 'o2', title: 'Informe de Costos por Centro de Operaciones', desc: 'Soporte presupuestal' }
+    ],
+    customers: [
+      { id: 'c1', title: 'Trabajadores Operativos', desc: 'Pago puntual de recargos' },
+      { id: 'c2', title: 'Control de Gestión / Finanzas', desc: 'Validación presupuestal de nómina' }
+    ],
+    processSteps: [
+      {
+        id: 'p1_88',
+        stepNumber: 1,
+        title: 'Cruce de Marcaciones Biométricas vs. Autorizaciones',
+        summary: 'Consolidar las marcaciones del reloj biométrico con las cartas de autorización firmadas.',
+        sapTx: 'ZHR_BIOMETRICO / Excel Macro',
+        sapVariant: 'VAR_MARCACIONES_CRUDE',
+        folderPath: '\\\\servidor_nomina\\horas_extras\\2026\\consolidado\\',
+        pcrTitle: 'Pagar horas extras no autorizadas por jefatura',
+        pcrDesc: 'Liquidar tiempo de permanencia voluntario o marcaciones tempranas que no fueron aprobadas por la gerencia.',
+        checklists: [
+          'Cargar el reporte biométrico quincenal.',
+          'Aplicar la regla de tolerancia (15 minutos antes/después del turno no cuentan como HE).',
+          'Validar que cada hora extra tenga firma de aprobación del jefe directo.'
+        ],
+        userNotes: 'Verificar que no se superen las 12 horas extras semanales por ley.'
+      },
+      {
+        id: 'p2_88',
+        stepNumber: 2,
+        title: 'Carga Masiva de Conceptos en SAP (Infotipo 2005)',
+        summary: 'Procesar los conceptos de Recargo Nocturno (25%), HE Diurna (25%), HE Nocturna (75%), Festiva (100%).',
+        sapTx: 'PA30 / CATS / ZHR_CARGA_HE',
+        sapVariant: 'TEMPLATE_HE_2026',
+        folderPath: 'SAP HR -> Tiempos -> Infotipo 2005',
+        pcrTitle: 'Confusión de recargos y multiplicadores',
+        pcrDesc: 'Cargar Horas Extras Diurnas Festivas con el concepto de Diurna Ordinaria, subpagando al colaborador.',
+        checklists: [
+          'Validar los códigos de concepto en SAP: 1100 (HED), 1105 (HEN), 1110 (HEDF), 1115 (HENF).',
+          'Subir el template a través del programa ZHR_CARGA_HE.',
+          'Verificar que el log de errores no presente registros rechazados.'
+        ],
+        userNotes: 'Prestar atención a los turnos nocturnos que cruzan la medianoche.'
+      }
+    ]
   }
 ];
 
