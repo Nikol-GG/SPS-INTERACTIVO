@@ -1,0 +1,7 @@
+@tailwindcss base;
+@tailwindcss components;
+@tailwindcss utilities;
+
+body {
+  background-color: #f8fafc;
+}
