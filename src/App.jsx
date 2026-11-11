@@ -490,15 +490,11 @@ export default function App() {
               <Layers className="w-64 h-64" />
             </div>
             <div className="relative z-10 max-w-3xl space-y-2">
-              <span className="px-2.5 py-1 text-[11px] font-semibold bg-blue-950 text-blue-300 border border-blue-800 rounded-full inline-flex items-center space-x-1">
-                <Zap className="w-3 h-3 text-amber-400" />
-                <span>Alineado con Expectativas de Dirección</span>
-              </span>
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                Matriz de Control y SIPOC Interactivo de Nómina
+                SPS Interactivo de Nómina
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Selecciona cualquiera de tus procesos operativos a cargo para acceder a su mapa SIPOC completo, puntos críticos de riesgo (PCR), transacciones de SAP y checklist de doble verificación antes de entregar resultados.
+                Aquí podrás tener una visualización sobre el paso a paso de las tareas que te corresponden de una forma más amigable. Evitando cometer errores que en su momento yo pude cometer. Sácale el máximo provecho. Espero te sea de gran ayuda. Just Do It
               </p>
             </div>
           </div>
