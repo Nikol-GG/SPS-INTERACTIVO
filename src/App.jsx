@@ -11,32 +11,29 @@ const tasksCatalog = [
   {
     id: 'pr-nom-042',
     code: "PR-NOM-042",
-    title: "Cargue Planillas de Seguridad Social (Pozos Petroleros)",
-    category: "Seguridad Social & Campo",
+    title: "Cargue Planillas de Seguridad Social",
+    category: "Seguridad Social",
     version: "v2026.1",
-    responsable: "Practicante de Ingeniería Industrial / Analista de Nómina",
+    responsable: "Practicante Analista de Nómina",
     impactoNegocio: "Permiso de ingreso de trabajadores a campos de extracción. Un error paraliza la operación y genera costos de tiempo inactivo y multas contractuales.",
     criticidad: "Alta",
     frecuencia: "Mensual",
     suppliers: [
-      { id: 's1', title: 'Mi Planilla / Asofondos', desc: 'Operadores de Información de SS' },
-      { id: 's2', title: 'SAP ERP (Módulo HR)', desc: 'Base Maestra de Empleados' },
-      { id: 's3', title: 'Supervisores HSE', desc: 'Solicitud de Turnos en Pozos' }
+      { id: 's1', title: 'MiPlanilla', desc: 'Página oficial' },
+      { id: 's2', title: 'SAP ERP', desc: 'Base Maestra de Empleados' }
     ],
     inputs: [
-      { id: 'i1', title: 'Planillas en PDF', desc: 'Comprobantes de pago mes actual' },
-      { id: 'i2', title: 'Reporte Excel Masivo', desc: 'Consolidado Nombres + Cédulas' },
-      { id: 'i3', title: 'Variantes SAP (GIN)', desc: 'Código Único de Trabajador' }
+      { id: 'i1', title: 'Planillas en PDF', desc: 'Planillas de cada empleado' },
+      { id: 'i2', title: 'Reporte Excel Masivo', desc: 'Consolidado de las personas con Seguridad Social' },
+      { id: 'i3', title: 'Variantes SAP (GIN)', desc: 'Para obtener el Código Único de Trabajador' }
     ],
     outputs: [
-      { id: 'o1', title: 'PDFs Renombrados', desc: 'Formato estándar por Cédula' },
-      { id: 'o2', title: 'Template de Cargue', desc: 'Archivo estandarizado (GIN + ID)' },
-      { id: 'o3', title: 'Habilitación en Pozo', desc: 'Registro activo en plataforma HSE' }
+      { id: 'o1', title: 'PDFs Renombrados', desc: '' },
+      { id: 'o2', title: 'Template de Cargue', desc: 'Archivo estandarizado (GIN + Nombre + ID)' }
     ],
     customers: [
       { id: 'c1', title: 'Trabajadores en Campo', desc: 'Acceso habilitado al pozo' },
-      { id: 'c2', title: 'Supervisores HSE / Campo', desc: 'Verificación de cuadrillas' },
-      { id: 'c3', title: 'Cliente / Auditoría', desc: 'Cumplimiento legal y contractual' }
+      { id: 'c3', title: 'Auditoría', desc: 'Cumplimiento legal y contractual' }
     ],
     processSteps: [
       {
@@ -432,9 +429,6 @@ export default function App() {
               <div>
                 <h1 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
                   <span>Portal de Procesos de Nómina</span>
-                  <span className="text-[10px] bg-blue-900/60 text-blue-300 font-mono px-2 py-0.5 rounded border border-blue-700/50">
-                    Ingeniería Industrial
-                  </span>
                 </h1>
                 <p className="text-xs text-slate-400">Sistema de Control Operativo, SIPOC y Gestión de Riesgos</p>
               </div>
@@ -942,7 +936,7 @@ export default function App() {
       {/* FOOTER */}
       <footer className="bg-slate-900 border-t border-slate-800 py-4 mt-auto">
         <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>Portal Multitarea de Procesos de Nómina &bull; Gestión de Calidad e Ingeniería Industrial</p>
+          <p>Portal Multitarea de Procesos de Nómina &bull; Gestión de Calidad</p>
           <p className="text-slate-600">Diseñado para asegurar la constancia y prevenir errores operativos</p>
         </div>
       </footer>
