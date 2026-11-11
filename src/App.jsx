@@ -430,7 +430,7 @@ export default function App() {
                 <h1 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
                   <span>Portal de Procesos de Nómina</span>
                 </h1>
-                <p className="text-xs text-slate-400">Sistema de Control Operativo, SIPOC y Gestión de Riesgos</p>
+                <p className="text-xs text-slate-400">Sistema de Control Operativo</p>
               </div>
             </div>
 
