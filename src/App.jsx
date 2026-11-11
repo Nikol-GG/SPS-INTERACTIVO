@@ -44,67 +44,60 @@ const tasksCatalog = [
         title: 'Descargar Planillas y Consolidado',
         summary: 'Obtención masiva de archivos PDF y consolidado Excel desde el operador de información.',
         sapTx: 'Portal Web "Mi Planilla"',
-        sapVariant: 'VAR_NOM_SEGSOC_2026',
-        folderPath: '\\\\servidor_nomina\\pozos\\2026\\descargas_raw\\',
+        folderPath: 'https://empresas.miplanilla.com/PublicoEmpresas/Publico/IndexEmpresas',
         pcrTitle: 'Descarga incompleta o período equivocado',
-        pcrDesc: 'Bajar planillas de un período anterior o dejar trabajadores por fuera del lote.',
+        pcrDesc: 'Bajar planillas de un período anterior.',
         checklists: [
-          'Confirmar que el período de pago coincida con el mes en curso.',
-          'Verificar que el número total de registros en Excel coincida con la cantidad de PDFs bajados.',
-          'Guardar archivos exclusivamente en la carpeta oficial del servidor.'
+          'Confirmar que el período de pago coincida con el mes en curso.'
         ],
-        userNotes: 'El reporte Excel de Mi Planilla descarga por defecto con comas. Ajustar formato si la macro lo requiere.'
+        userNotes: 'Cuando este descargando los pdf, refrescar la página porque puede que no se actualice el porcentaje '
       },
       {
         id: 'p2',
         stepNumber: 2,
         title: 'Ejecutar Macro de Renombrado',
-        summary: 'Transformación automatizada de nombres de PDF al estándar Cédula_Nombre.pdf.',
+        summary: 'Transformación automatizada de nombres de PDF al estándar',
         sapTx: 'Excel VBA (Macro_Renombrar_v3.xlsm)',
-        sapVariant: 'Plantilla de Rótulo Automático',
-        folderPath: '\\\\servidor_nomina\\pozos\\2026\\pdf_renombrados\\',
-        pcrTitle: 'Desfase de correspondencia PDF vs. Cédula',
-        pcrDesc: 'Si el Excel tiene una fila corrida, la Macro asignará la planilla de una persona al PDF de otra.',
+        folderPath: 'ruta del excel para descargar',
+        pcrTitle: 'Ninguno',
+        pcrDesc: '',
         checklists: [
-          'Ejecutar la macro en modo prueba si se agregaron nuevas filas manualmente.',
-          'Efectuar conteo exacto: Archivos en carpeta destino = Filas en Excel.',
-          'Abrir manualmente el primer, del medio y último PDF para verificar que el contenido coincida con el nombre del archivo.'
+          'Ejecutar la macro y asegurarse que se hallan renombrado los PDFs.'
         ],
-        userNotes: 'Si la macro arroja error de permisos, ejecutar Excel como Administrador.'
+        userNotes: 'Descarga el excel de la macro a tu escritorio'
       },
       {
         id: 'p3',
         stepNumber: 3,
         title: 'Extraer GIN en SAP ERP',
         summary: 'Cruce del número de cédula contra la base maestra para obtener el Código Único GIN.',
-        sapTx: 'SE16N / ZHR_MAESTRO_POZOS / SQ01',
-        sapVariant: '/VAR_HABILITA_POZO_GIN',
+        sapTx: 'S_PH0_48000513 - Ad-hoc-Query --> User Group= (HR-ALA)-->JMSPAYROLLCHECK',
+        sapVariant: 'CO_NGOMEZSS',
         folderPath: 'SAP ERP -> Exportar a Local: C:\\Users\\Public\\SAP_Exports\\',
         pcrTitle: 'Cédula no encontrada o GIN duplicado',
         pcrDesc: 'Personal de nuevo ingreso que no tenga variante GIN creada en SAP rebotará en la plataforma.',
         checklists: [
-          'Utilizar la variante oficial /VAR_HABILITA_POZO_GIN en la transacción SE16N.',
-          'Asegurar que la búsqueda no limite la cantidad máxima de aciertos a 200 (quitar límite en SAP).',
-          'Validar que no existan celdas vacías (#N/A) en el cruce del archivo resultante.'
+          'Utilizar la variante oficial indicada',
+          'Pegar las cédulas que se extraen del Excel',
+          'Periodo desde el mes pasado'
         ],
-        userNotes: 'Si una cédula es de un contratista reciente, solicitar la creación del GIN al analista senior.'
+        userNotes: 'Algunas veces no descarga el GIN de todos, pueden ser retirados o vuelve a intentar con los que faltaron'
       },
       {
         id: 'p4',
         stepNumber: 4,
         title: 'Cargar PDFs a Ruta del Servidor',
         summary: 'Transferencia masiva de planillas al repositorio de acceso remoto de la plataforma.',
-        sapTx: 'Repositorio Compartido / FTP',
+        sapTx: 'Repositorio Compartido',
         sapVariant: 'N/A - Protocolo de Red',
-        folderPath: '\\\\servidor_nomina\\plataforma_pozos\\planillas_cargadas\\',
-        pcrTitle: 'Archivos corruptos o timeout de red durante la carga',
-        pcrDesc: 'Un corte breve de red puede dejar archivos en tamaño 0 KB, impidiendo que el trabajador descargue su carné.',
+        folderPath: 'Explorados de archivos-->Red-->\\hhowebapps.lam.slb.com\Structure\Autom',
+        pcrTitle: 'Error al cargar los archivos',
+        pcrDesc: 'Preguntar a Miguel Andres Carvajar que debes hacer o cual es la nueva ruta',
         checklists: [
-          'Verificar el peso del lote total antes y después del pegado en el servidor.',
-          'Asegurarse de que no existan archivos abiertos en Excel/Adobe mientras se realiza la carga.',
-          'Revisar que el nombre de los archivos no contenga caracteres especiales (ñ, tildes, #, /).'
+          'La ruta este sirviendo',
+          'Se carguen la totalidad de los PDFs'
         ],
-        userNotes: 'Hacer el cargue preferiblemente antes de las 11:00 AM para evitar congestión de canal.'
+        userNotes: ''
       },
       {
         id: 'p5',
@@ -112,33 +105,30 @@ const tasksCatalog = [
         title: 'Estructurar y Cargar Template',
         summary: 'Asociación final en la plataforma entre el GIN, la cédula y la ruta del PDF.',
         sapTx: 'Plataforma Web Control Operaciones Pozos',
-        sapVariant: 'Template_Cargue_Masivo_v4.xlsx',
-        folderPath: 'Plataforma HSE -> Menú "Cargue Masivo de Seguridad Social"',
-        pcrTitle: 'Rechazo del Template por formato de celdas',
-        pcrDesc: 'Cédulas con formato científico (1.02E+09) o GINs con ceros a la izquierda borrados.',
+        sapVariant: 'Template.xlsx',
+        folderPath: '',
+        pcrTitle: 'Rechazo de PDFs por el tipo de excel que cargó',
+        pcrDesc: 'Asegurese que el tipo de archivo que cargue sea .XLSX y no .XLS',
         checklists: [
-          'Formatear la columna Cédula y GIN explícitamente como TEXTO en Excel antes de guardar.',
-          'Comprobar que no existan duplicados en la columna GIN dentro del mismo lote.',
-          'Verificar el mensaje de confirmación del sistema ("Cargue 100% Exitoso").'
+          'Hacer un vlookup con la CC para traer el GIN del Query de SAP',
+          'Validar que todas las personas tengan su GIN'
         ],
         userNotes: 'Guardar siempre el archivo con extensión .XLSX estándar.'
       },
       {
         id: 'p6',
         stepNumber: 6,
-        title: 'Auditoría y Muestreo de Calidad',
-        summary: 'Verificación aleatoria y dirigida en la plataforma para confirmar visualización activa.',
+        title: 'Cargue de Archivos',
+        summary: 'Subir el template y los PDFs',
         sapTx: 'Portal de Verificación HSE en Campo',
-        sapVariant: 'Filtro por Centro de Costo / Pozo Target',
-        folderPath: 'Plataforma HSE -> Consulta de Personal Habilitado',
-        pcrTitle: 'Confirmación falsa de cargue',
-        pcrDesc: 'Confiar en que el sistema funcionó sin validar que el PDF abra correctamente desde la vista del supervisor en pozo.',
+        folderPath: 'https://hhowebapps.lam.slb.com/HRTool/Account/Login-->Social Security-->Upload',
+        pcrTitle: 'Poner la fecha que no corresponde',
+        pcrDesc: 'Recuerda que las planillas se cargan mes vencido, por eso debes poner un día del mes anterior',
         checklists: [
-          'Auditar el 10% de la población cargada (mínimo 5 trabajadores).',
-          'Incluir en la muestra obligatoriamente: el primer registro, el último, y 3 elegidos al azar.',
-          'Descargar el carné digital de 1 trabajador y confirmar que el PDF abre correctamente.'
+          'Verificar que con varios GIN que efectivamente se han cargado las planillas',
+          'Incluir en la muestra obligatoriamente: el primer registro, el último, y 3 elegidos al azar.'
         ],
-        userNotes: 'Esta es la validación que evita el error de $1.000 USD. No saltarse el muestreo.'
+        userNotes: ''
       }
     ]
   },
